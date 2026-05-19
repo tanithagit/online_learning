@@ -26,7 +26,7 @@ def register_user(db: Session, data: UserRegister) -> User:
     db.add(new_user)
     db.flush()
 
-    # Create free subscription for new user
+    # Create free subscription
     subscription = Subscription(
         user_id=new_user.id,
         plan=PlanType.free,
@@ -38,29 +38,22 @@ def register_user(db: Session, data: UserRegister) -> User:
     return new_user
 
 def login_user(db: Session, email: str, password: str) -> dict:
-    # Find user
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
-
-    # Verify password
     if not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
-
-    # Check active
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Account is inactive"
         )
-
-    # Create token
     access_token = create_access_token(
         data={
             "sub": user.email,
@@ -68,7 +61,6 @@ def login_user(db: Session, email: str, password: str) -> dict:
         },
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-
     return {
         "access_token": access_token,
         "token_type": "bearer",

@@ -1,6 +1,17 @@
 from pydantic import BaseModel
 from datetime import datetime
-from app.schemas.course import CourseResponse
+from typing import Optional
+
+class CourseResponse(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    price: Optional[float] = 0.0
+    created_by: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class EnrollmentCreate(BaseModel):
     course_id: int
